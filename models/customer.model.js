@@ -47,19 +47,11 @@ const Customers = sequelize.define("Customer",
     salt: {
       type: DataTypes.TEXT,
       allowNull:false
-    },
-    created_at: {
-      type: DataTypes.STRING,
-    
-    },
-    modified_at: {
-      type: DataTypes.STRING
     }
-
 },{
-  timestamps: false,
-  createdAt: false,
-  updatedAt: false  
+  timestamps: true,
+  createdAt: "created_at",
+  updatedAt: "modified_at"  
   
 })
 

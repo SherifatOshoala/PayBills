@@ -29,19 +29,12 @@ const Wallets = sequelize.define("Wallet",
         type: DataTypes.DECIMAL,
         allowNull: false,
         defaultValue: 0.00
-    },
-    created_at: {
-      type: DataTypes.STRING,
-    
-    },
-    modified_at: {
-      type: DataTypes.STRING
     }
 
 },{
-  timestamps: false,
-  createdAt: false,
-  updatedAt: false  
+  timestamps: true,
+  createdAt: "created_at",
+  updatedAt: "modified_at"  
   
 })
 

@@ -22,19 +22,11 @@ const Otp = sequelize.define("Otp",
     otp: {
       type: DataTypes.STRING,
       allowNull: false
-    },
-    created_at: {
-      type: DataTypes.STRING,
-      
-    },
-    modified_at: {
-      type: DataTypes.STRING
     }
-
 },{
-  timestamps: false,
-  createdAt: false,
-  updatedAt: false  
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at'  
 })
 
 

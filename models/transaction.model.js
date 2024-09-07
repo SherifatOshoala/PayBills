@@ -21,22 +21,25 @@ const Transactions = sequelize.define("Transaction",
         type: DataTypes.STRING,
         allowNull: true,
         /*
-            we need to add a reference to the wallet table but we 
+            I need to add a reference to the wallet table but I 
             decided to allow the wallet id to be null
-            should in case other customer wants to make a 
-            transaction without a wallet. So whne the wallet id is null
-            we can assume that the customer is making a transaction without a wallet
-            using others payment methods
+            in case a customer wants to make a transaction without a wallet. 
+            So when the wallet id is null I assume that the customer is making 
+            a transaction without a wallet using other payment methods
         */
     },
+    payment_reference:{
+    type: DataTypes.STRING,
+    allowNull: true
+},
     email: {
         type: DataTypes.STRING,
         allowNull: false
         /**
-         * we need to add a reference to the customer table
-         * so that we can easily get the customer details
-         * but we decided to allow the email because
-         * we can have a transaction without a customer id but
+         * I need to add a reference to the customer table
+         * so that I can easily get the customer details
+         * but I decided to allow the email because
+         * there could be a transaction without a customer_id but
          * have the email of the customer instead
          */
     },
@@ -65,19 +68,12 @@ const Transactions = sequelize.define("Transaction",
     payment_means: {
         type: DataTypes.ENUM,
         values: ['wallet', 'others']
-    },
-    created_at: {
-      type: DataTypes.STRING,
-    
-    },
-    modified_at: {
-      type: DataTypes.STRING
     }
 
 },{
-  timestamps: false,
-  createdAt: false,
-  updatedAt: false  
+  timestamps: true,
+  createdAt: "created_at",
+  updatedAt: "modified_at"  
   
 })
 

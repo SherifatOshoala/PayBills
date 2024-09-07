@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken')
 const {Customers} = require('../models/customer.model')
-const authorisation =  (req, res,  next ) => {
+const authorisation =  (req, res, next ) => {
        
     try{
         const {token} = req.headers
@@ -15,17 +15,16 @@ const authorisation =  (req, res,  next ) => {
         }
             
             const email = decoded.email
-            //use the email to fetch the customer_id
            const data =  await Customers.findOne({where:{ email: email} })
             if(data == null)  {
                     return res.status(400).json({
                         status: 'error',
                         message: "Unauthorised Access"
-                    })
-                     
+                    })  
             }
             
             req.params.customer_id = data.customer_id
+            req.params.email = data.email
         next()
         })
       
