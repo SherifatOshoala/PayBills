@@ -22,13 +22,19 @@ const initializePayment = async(email, amount) =>{
     
 
 const verifyPayment = async(reference) => {
-return axios({
-    method:'get',
-    url:   `https://api.paystack.co/transaction/verify/${reference}`,
-    headers: {
-        Authorization: `Bearer ${process.env.PAYSTACK_API_SECRET_KEY}`
+    try{
+        const response = await axios({
+            method:'get',
+            url:   `https://api.paystack.co/transaction/verify/${reference}`,
+            headers: {
+                Authorization: `Bearer ${process.env.PAYSTACK_API_SECRET_KEY}`
+            }
+        })
+        return response 
     }
-})
+catch(error){
+    return null
+}
 }
 
 

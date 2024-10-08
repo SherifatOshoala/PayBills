@@ -15,7 +15,26 @@ const data = {
     successfulFunding: 'Your wallet has been successfully funded with ',
     invalidTransaction: "Invalid Transaction!",
     walletFetched: "Wallet fetched successfully!",
-    paymentInitialized: 'Payment initialized successfully'
+    paymentInitialized: 'Payment initialized successfully',
+    serviceCreated: 'Service created successfully!',
+    invalidService: "Invalid service name",
+    serviceExists: "Service already exists!",
+    allServices: "All services fetched successfully",
+    airtimeOperatorsFetched: "All airtime operators fetched successfully!",
+    operatorsFetched: "operators fetched successfully!",
+    billsFetched: "bills fetched successfully",
+    validationSuccessful: "Subscriber bill detail validated successfully",
+    insufficientFunds: "insufficient funds",
+    airtimePurchased: "Airtime purchased successfully!",
+    airtimePurchaseFailed: "Airtime purchase failed!",
+    invalidPaymentMeans: "Invalid payment means!",
+    dataSubscriptionFailed: "Data subscription failed",
+    dataSubscriptionSuccess: "Data subscription successful",
+    billersFetched: "Billers fetched successfully",
+    billPaymentProcessing: "Payment for bill is processing",
+    billPaymentSuccessful: "Bill purchase/payment successful",
+    utilityPurchaseFailed: "Utility purchase/payment failed!",
+    billPaymentFailed:"Bill purchase/payment failed!"
 }
 
 

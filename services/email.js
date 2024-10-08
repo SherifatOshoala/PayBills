@@ -12,7 +12,7 @@ const sendMail = (email, subject, text) => {
       text: text,
     }
 
-    sgMail.send(msg).then(()=>console.log('OTP Email sent')).catch(error =>console.log(error));
+    sgMail.send(msg).then(()=>console.log('Email sent to customer')).catch(error =>console.log(error));
 
 }
 
