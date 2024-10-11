@@ -3,26 +3,25 @@ const router = express.Router()
 const {createService} = require('../controllers/admin-services.controllers')
 
 /**
- *@openapi
+ * @openapi
  * /services:
  *   post:
  *     summary: Create a new service
  *     description: Creates a new service if it doesn't already exist.
  *     tags:
  *       - Services
- *     parameters:
- *       - in: body
- *         name: service
- *         description: The service details
- *         required: true
- *         schema:
- *           type: object
- *           required:
- *             - service_name
- *           properties:
- *             service_name:
- *               type: string
- *               description: Name of the service
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - service_name
+ *             properties:
+ *               service_name:
+ *                 type: string
+ *                 description: Name of the service
+ *                 example: "Data Subscription"
  *     responses:
  *       201:
  *         description: Service successfully created

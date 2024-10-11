@@ -1,6 +1,6 @@
 const data = {
 
-    customerExist : "A customer already exist with this email",
+    customerExists : "A customer already exists with this email",
     otpSent: "An OTP has been sent to your email",
     successStatus : "success",
     invalidEmailOrOtp: 'Invalid email or otp!',

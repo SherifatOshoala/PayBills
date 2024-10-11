@@ -1,6 +1,10 @@
 require('dotenv').config()
 const express = require('express')
 const app = express()
+const cors = require('cors')
+const helmet = require('helmet')
+const compression = require("compression")
+const sanitizeInputs = require('./middleware/xss')
 const displayRoutes = require('express-routemap')
 const port = process.env.APP_PORT || 3000
 const sequelize = require('./config/sequelize')
@@ -21,9 +25,29 @@ const transaction = require('./models/transaction.model')
 const cron = require('node-cron')
 const {crawlAndUpdateUtilityStatus} = require('./controllers/customer.controller')
 
+app.use(helmet())
+
+const allowedOrigins = ['http://localhost:2010',"http://production.com" ]
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  },
+  methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+  allowedHeaders:['Content-Type', 'Authorization'],
+  };
+
+app.use(cors(corsOptions))
 app.use(express.json())
+app.use(sanitizeInputs)
+app.use(compression({ threshold: 1024 }))
 app.use(customerRoutes)
 app.use(servicesRoutes)
+
+
 app.get('/', (req, res) => {
   res.status(200).json({
     status: "success",
@@ -63,8 +87,12 @@ const swaggerDefinition = {
     {
       url: `http://localhost:${port}`,
       description: 'Development server',
+    },
+    {
+      url: 'http://paybills.com',
+      description: 'Production server',
     }
-  ],
+  ]
 }
 
 const options = {
@@ -76,9 +104,20 @@ const swaggerSpec = swaggerJsdoc(options);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-
-
-
+app.use((err, req, res, next) => {
+  if(err.sqlMessage || err.sqlState){
+     return res.status(500).json({
+      status: 'error',
+      message: 'Something went wrong'
+  })
+}else{
+  return res.status(err.code || 400).json({
+    status: 'error',
+    message: err.message
+   
+  })
+}
+})
 
 
 app.use(invalidRoutes)

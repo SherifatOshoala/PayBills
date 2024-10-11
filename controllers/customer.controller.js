@@ -3,7 +3,7 @@ const {createCustomerValidation, validateVerificationData, loginValidation, upda
 const {Customers}  = require('../models/customer.model')
 const { TemporaryCustomers } = require('../models/customer_temp.model')
 const { Otp } = require('../models/otp.model')
-const {hashPassword, generateOtp, debitWallet, creditWallet, checkIfTransactionExists, comparePassword, getWalletByEmail} = require('../utils')
+const {hashPassword, generateOtp, debitWallet, creditWallet, checkIfTransactionExists, comparePassword, getWalletByEmail, createError} = require('../utils')
 const { v4: uuidv4 } = require('uuid');
 const data  = require('../messages')
 const jwt = require('jsonwebtoken');
@@ -19,15 +19,14 @@ const ONE_HOUR = '1h'
 
 const { billsCategories, billersInformation, billsInformation, validateBillDetails, makeBillPayment, billStatus} = require('../services/flutterwave.service')
 
-const createCustomer = async(req, res) => {
+const createCustomer = async(req, res, next) => {
 
    try{
     const { surname, othernames, email, password } = req.body
     const { error } = createCustomerValidation(req.body)
-    if (error != undefined) throw new Error(error.details[0].message) 
-     const checkIfEmailExist = await Customers.findOne({where:{ email: email} })
- 
-    if(checkIfEmailExist != null ) throw new Error(data.customerExist)
+    if (error != undefined) throw new Error (error.details[0].message)
+    const checkIfEmailExist = await Customers.findOne({where:{ email: email} })
+    if(checkIfEmailExist != null) throw createError(409, data.customerExists)
     const [hash, salt] = await hashPassword(password)
     await TemporaryCustomers.create({
         customer_id: uuidv4(),
@@ -49,14 +48,11 @@ sendMail(email, 'Your OTP', `Hi ${surname},\nPlease use this ${otp} to verify yo
             message: data.otpSent
      })
    }catch(error){
-    res.status(400).json({
-        status: "error",
-        message: error.message
-    })
+  next(error)
    }
 }
 
-const verifyEmail = async(req, res) => {
+const verifyEmail = async(req, res, next) => {
 
     try{
         const { email, otp } = req.params
@@ -65,7 +61,7 @@ const verifyEmail = async(req, res) => {
 
         const checkIfEmailAndOtpExist =  await Otp.findOne({where:{ email: email, otp: otp} })
        
-        if(checkIfEmailAndOtpExist == null ) throw new Error(data.invalidOrExpiredOtp)
+        if(checkIfEmailAndOtpExist == null) throw new Error(data.invalidOrExpiredOtp)
     
     const convertMillisecondsToMinutes = 1000 * 60;
     const otpCreatedTime = new Date(
@@ -78,7 +74,7 @@ const verifyEmail = async(req, res) => {
     );
     if (timeInMinutes > 10) throw new Error(messages.invalidOrExpiredOtp)
         const customerTemp = await TemporaryCustomers.findOne({where:{ email: email} })
-        if(customerTemp == null ) throw new Error(data.customerNotExist)
+        if(customerTemp == null ) throw createError(404, data.customerNotExist)
 
  await sequelize.transaction (async (t) => {
     await Customers.create({
@@ -107,25 +103,19 @@ await TemporaryCustomers.destroy({
             email: email
         },transaction: t
     })
-   
 
 })
-     
  res.status(200).json({
             status: data.successStatus,
             message: data.emailVerified
         })
 
     }catch(error){
-        res.status(400).json({
-            status: data.errorStatus,
-            message: error.message
-        })
-    }
-    
+   next(error)
+}
 }
 
-const login = async(req, res) => {
+const login = async(req, res, next) => {
     try{
     const { email, password } = req.body
   const validate = loginValidation(req.body);
@@ -141,14 +131,11 @@ const login = async(req, res) => {
         message: data.loginSuccess
     })
     }catch(error){
-        res.status(400).json({
-            status: data.errorStatus,
-            message: error.message
-        })
+      next(error)
     }   
 }
 
-const updateCustomer = async(req, res) => {  
+const updateCustomer = async(req, res, next) => {  
     try{
     const {customer_id} = req.params
     const { error } = updateCustomerValidation(req.body)
@@ -165,18 +152,15 @@ const updateCustomer = async(req, res) => {
     })
 
     }catch(error){
-        res.status(400).json({
-            status: data.errorStatus,
-            message: error.message
-        })
+       next(error)
     }
  }
 
- const getCustomer= async (req, res) => {
+ const getCustomer= async (req, res, next) => {
     const {customer_id} = req.params 
     try{
 const customer = await Customers.findOne({where:{customer_id: customer_id}, attributes:{exclude: ["hash", "salt", "customer_id"]}})
-if(customer == null) throw new Error (data.customerNotExist)
+if(customer == null) throw createError(404, data.customerNotExist)
 res.status(200).json({
     status: data.successStatus,
     message: data.customerFound,
@@ -184,14 +168,11 @@ res.status(200).json({
 })
     }
     catch (error){
-        res.status(400).json({
-            status: data.errorStatus,
-            message: error.message
-        })
+      next(error)
     }
  }
 
- const startWalletFunding = async(req, res) => { 
+ const startWalletFunding = async(req, res, next) => { 
     try{
        const  {email} = req.params
         const { amount} = req.body
@@ -208,15 +189,11 @@ res.status(200).json({
 
 
     } catch(error){
-        res.status(400).json({
-            status: data.errorStatus,
-            message: error.message
-        
-        })
+      next(error)
   }
 }
 
-const completeWalletFunding = async(req, res) => {
+const completeWalletFunding = async(req, res, next) => {
   const  {customer_id, reference, email} = req.params
   try{
     const checkReference = await checkIfTransactionExists(reference)
@@ -246,22 +223,17 @@ const updatedAmount = Number(getWallet.amount) + amount
 await Wallets.update({amount:updatedAmount}, {where:{customer_id: customer_id},transaction: t})
 
 })
-
     res.status(200).json({
        status: data.successStatus,
        message: `${data.successfulFunding} ${amount}`
     })
   }
   catch(error){
-    res.status(500).json({
-        status: data.errorStatus,
-        message: error.message
-    })
+ next(error)
   }
-
 }
 
-const getWallet = async(req, res) => {
+const getWallet = async(req, res, next) => {
 const {customer_id, email} = req.params
     try{
 const wallet = await Wallets.findOne({where:{customer_id: customer_id}, attributes:{exclude: ["sn", "customer_id", "created_at","modified_at" ]}})
@@ -277,10 +249,7 @@ const transactions = await Transactions.findAll({where: {email: email},attribute
         } 
         })
     } catch(error){
-res.status(500).json({
-    status: data.errorStatus,
-    message: error.message
-})
+next(error)
     }
 }
 
@@ -585,20 +554,20 @@ res.status(200).json({
 // }
 
 
-const payForBill = async(req, res) => {
+const payForBill = async(req, res, next) => {
     try{
         const { customer_id, email } = req.params 
         const { biller_code, biller_name, bill_category, item_code, subscriberNumber, amount, description, payment_means } = req.body
         switch (payment_means) {
             case payment_method.WALLET: 
             const transaction_reference = await debitWallet(amount,customer_id,email,bill_category, `Wallet Debit for ${biller_name}`)
-            if(transaction_reference == null) throw new Error(data.insufficientFunds)
+            if(transaction_reference == null) throw createError(402,data.insufficientFunds)
             const proceedToPayment = await processBillPayment(biller_code, item_code, subscriberNumber, amount, transaction_reference)
         if(proceedToPayment == false){
             await creditWallet(amount,customer_id,email,transaction_reference,`Refund for failed ${bill_category} payment`)
             await Transactions.update({ status: 'failed'},{where:{payment_reference: transaction_reference}})
-            throw new Error (data.billPaymentFailed)
-        }else if(proceedToPayment == null) throw new Error (data.billPaymentFailed)
+            throw createError(402, data.billPaymentFailed)
+        }else if(proceedToPayment == null) throw createError(402, data.billPaymentFailed)
         else await Transactions.update({ status: 'completed'}, {where:{ payment_reference: transaction_reference}})
             break;
     
@@ -611,7 +580,7 @@ const payForBill = async(req, res) => {
             const NAIRA_CONVERSION = 100
             const amountToBePurchased = verify.data.data.amount / NAIRA_CONVERSION
             const proceedToMakePayment = await processBillPayment(biller_code, item_code, subscriberNumber, amountToBePurchased,reference)
-            if(!proceedToMakePayment) throw new Error (data.billPaymentFailed)
+            if(!proceedToMakePayment) throw createError(402,data.billPaymentFailed)
             else{
                           await Transactions.create({
                                     transaction_id: uuidv4(),
@@ -637,11 +606,7 @@ const payForBill = async(req, res) => {
             message: data.billPaymentSuccessful
         })
     }catch(error){
-        res.status(500).json({
-            status: data.errorStatus,
-            message: error.message
-            })
-        
+        next(error) 
     }
     }
     
